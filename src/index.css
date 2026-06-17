@@ -5,20 +5,19 @@
 }
 
 :root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary: #ec4899;
+  --primary-hover: #db2777;
   --secondary: #64748b;
-  --accent: #0ea5e9;
+  --accent: #fbbf24;
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
-  --bg-dark: #0f172a;
-  --bg-darker: #020617;
-  --bg-card: rgba(30, 41, 59, 0.8);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: rgba(148, 163, 184, 0.2);
-  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --bg-dark: #0f0a1a;
+  --bg-darker: #0a0612;
+  --bg-card: rgba(30, 20, 50, 0.8);
+  --text-primary: #fdf4ff;
+  --text-secondary: #d8b4fe;
+  --border: rgba(236, 72, 153, 0.2);
 }
 
 html, body, #root {
@@ -29,7 +28,7 @@ html, body, #root {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 50%, #1e293b 100%);
+  background: var(--bg-dark);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -37,19 +36,224 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--secondary);
-  border-radius: 4px;
+  background: linear-gradient(135deg, #ec4899, #fbbf24);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: linear-gradient(135deg, #db2777, #f59e0b);
+}
+
+/* Main Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30px, 30px) scale(1.1); }
+  50% { transform: translate(-50px, 60px) scale(0.95); }
+  75% { transform: translate(-20px, 30px) scale(1.05); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -20px) scale(1.05); }
+  50% { transform: translate(60px, -40px) scale(0.9); }
+  75% { transform: translate(30px, -20px) scale(1.1); }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 50px) scale(1.15); }
+  66% { transform: translate(30px, -30px) scale(0.85); }
+}
+
+@keyframes orbFloat4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(50px, 40px) scale(1.1); }
+  50% { transform: translate(-20px, -50px) scale(0.9); }
+  75% { transform: translate(-40px, 20px) scale(1.05); }
+}
+
+/* Floating Elements */
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--element-opacity, 0.4);
+  }
+  90% {
+    opacity: var(--element-opacity, 0.4);
+  }
+  100% {
+    transform: translateY(-100vh) translateX(var(--sway, 30px)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floatDown {
+  0% {
+    transform: translateY(-100vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--element-opacity, 0.4);
+  }
+  90% {
+    opacity: var(--element-opacity, 0.4);
+  }
+  100% {
+    transform: translateY(100vh) translateX(calc(var(--sway, 30px) * -1)) rotate(-360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floatSway {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-30vh) translateX(calc(var(--sway, 30px) * 1.5)) rotate(90deg);
+  }
+  50% {
+    transform: translateY(-60vh) translateX(calc(var(--sway, 30px) * -1)) rotate(180deg);
+  }
+  75% {
+    transform: translateY(-85vh) translateX(calc(var(--sway, 30px) * 0.5)) rotate(270deg);
+  }
+  100% {
+    transform: translateY(-110vh) translateX(var(--sway, 30px)) rotate(360deg);
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(var(--rotation, 0deg));
+  }
+  25% {
+    transform: translateY(-20px) translateX(calc(var(--sway, 30px) * 0.5)) rotate(calc(var(--rotation, 0deg) + 15deg));
+  }
+  50% {
+    transform: translateY(-10px) translateX(calc(var(--sway, 30px) * -0.3)) rotate(calc(var(--rotation, 0deg) - 10deg));
+  }
+  75% {
+    transform: translateY(-30px) translateX(calc(var(--sway, 30px) * 0.7)) rotate(calc(var(--rotation, 0deg) + 20deg));
+  }
+}
+
+.floating-element {
+  animation: gentleFloat var(--duration, 20s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+
+/* Navigation Arrows - Hover Effects */
+.nav-arrow:hover {
+  transform: translateY(-50%) scale(1.15) !important;
+  background: linear-gradient(135deg, rgba(236,72,153,0.4), rgba(251,191,36,0.3)) !important;
+  box-shadow: 0 12px 40px rgba(236,72,153,0.4), 0 0 60px rgba(251,191,36,0.2) !important;
+}
+
+.nav-arrow:active {
+  transform: translateY(-50%) scale(1.05) !important;
+}
+
+/* Button Hover Effects */
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Thumbnail Hover */
+.thumbnail-container button:hover {
+  transform: scale(1.15) !important;
+  box-shadow: 0 6px 20px rgba(236,72,153,0.3) !important;
+}
+
+/* Shimmer effect for loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(236,72,153,0.1) 0%,
+    rgba(251,191,36,0.2) 50%,
+    rgba(236,72,153,0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Slideshow progress animation */
+@keyframes progressPulse {
+  0%, 100% {
+    transform: scaleX(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive styles */
+@media (min-width: 640px) {
+  .download-btn-text {
+    display: block !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-arrow {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .nav-arrow svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-arrow {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .nav-arrow-left {
+    left: 12px !important;
+  }
+
+  .nav-arrow-right {
+    right: 12px !important;
+  }
 }

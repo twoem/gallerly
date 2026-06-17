@@ -1,9 +1,93 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import JSZip from 'jszip'
 
 const TOTAL_IMAGES = 47
 const SLIDESHOW_INTERVAL = 3000
 const STORAGE_KEY = 'gallery_last_index'
+
+// Generate floating elements data
+const generateFloatingElements = (count) => {
+  const elements = []
+  for (let i = 0; i < count; i++) {
+    elements.push({
+      id: i,
+      type: ['flower', 'petal', 'sparkle', 'leaf', 'heart', 'star'][Math.floor(Math.random() * 6)],
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      size: 15 + Math.random() * 35,
+      duration: 15 + Math.random() * 25,
+      delay: Math.random() * 15,
+      opacity: 0.2 + Math.random() * 0.5,
+      rotation: Math.random() * 360,
+      sway: 20 + Math.random() * 40,
+    })
+  }
+  return elements
+}
+
+const FloatingElement = ({ element }) => {
+  const shapes = {
+    flower: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <circle cx="50" cy="30" r="18" opacity="0.9" />
+        <circle cx="30" cy="50" r="18" opacity="0.9" />
+        <circle cx="70" cy="50" r="18" opacity="0.9" />
+        <circle cx="38" cy="70" r="18" opacity="0.9" />
+        <circle cx="62" cy="70" r="18" opacity="0.9" />
+        <circle cx="50" cy="50" r="12" fill="#fbbf24" />
+      </svg>
+    ),
+    petal: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <ellipse cx="50" cy="50" rx="25" ry="45" transform="rotate(-30 50 50)" />
+      </svg>
+    ),
+    sparkle: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <polygon points="50,0 55,40 95,50 55,60 50,100 45,60 5,50 45,40" />
+      </svg>
+    ),
+    leaf: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <path d="M50 5 C80 20, 95 60, 50 95 C5 60, 20 20, 50 5 Z" />
+      </svg>
+    ),
+    heart: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <path d="M50 88 C20 60, 5 35, 25 18 C40 8, 50 20, 50 20 C50 20, 60 8, 75 18 C95 35, 80 60, 50 88Z" />
+      </svg>
+    ),
+    star: (
+      <svg viewBox="0 0 100 100" fill="currentColor">
+        <polygon points="50,5 61,40 98,40 68,62 79,97 50,75 21,97 32,62 2,40 39,40" />
+      </svg>
+    ),
+  }
+
+  const colors = ['#f472b6', '#fb7185', '#fbbf24', '#fcd34d', '#a3e635', '#bef264', '#fda4af', '#f9a8d4', '#fecaca']
+
+  return (
+    <div
+      className="floating-element"
+      style={{
+        position: 'absolute',
+        left: `${element.left}%`,
+        top: `${element.top}%`,
+        width: element.size,
+        height: element.size,
+        color: colors[element.id % colors.length],
+        opacity: element.opacity,
+        transform: `rotate(${element.rotation}deg)`,
+        '--duration': `${element.duration}s`,
+        '--delay': `${element.delay}s`,
+        '--sway': `${element.sway}px`,
+        pointerEvents: 'none',
+      }}
+    >
+      {shapes[element.type]}
+    </div>
+  )
+}
 
 function App() {
   const [currentIndex, setCurrentIndex] = useState(() => {
@@ -18,10 +102,13 @@ function App() {
   const [touchEnd, setTouchEnd] = useState(null)
   const [imageLoaded, setImageLoaded] = useState({})
   const [showControls, setShowControls] = useState(true)
+  const [imageAnimating, setImageAnimating] = useState(false)
 
   const containerRef = useRef(null)
   const slideshowRef = useRef(null)
   const controlsTimeoutRef = useRef(null)
+
+  const floatingElements = useMemo(() => generateFloatingElements(40), [])
 
   // Save current index to localStorage
   useEffect(() => {
@@ -32,7 +119,11 @@ function App() {
   useEffect(() => {
     if (isSlideshow) {
       slideshowRef.current = setInterval(() => {
-        setCurrentIndex(prev => (prev + 1) % TOTAL_IMAGES)
+        setImageAnimating(true)
+        setTimeout(() => {
+          setCurrentIndex(prev => (prev + 1) % TOTAL_IMAGES)
+          setImageAnimating(false)
+        }, 300)
       }, SLIDESHOW_INTERVAL)
     } else {
       if (slideshowRef.current) {
@@ -65,15 +156,27 @@ function App() {
   }, [isSlideshow, currentIndex])
 
   const goToNext = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % TOTAL_IMAGES)
+    setImageAnimating(true)
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev + 1) % TOTAL_IMAGES)
+      setImageAnimating(false)
+    }, 200)
   }, [])
 
   const goToPrev = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + TOTAL_IMAGES) % TOTAL_IMAGES)
+    setImageAnimating(true)
+    setTimeout(() => {
+      setCurrentIndex(prev => (prev - 1 + TOTAL_IMAGES) % TOTAL_IMAGES)
+      setImageAnimating(false)
+    }, 200)
   }, [])
 
   const goToIndex = useCallback((index) => {
-    setCurrentIndex(index)
+    setImageAnimating(true)
+    setTimeout(() => {
+      setCurrentIndex(index)
+      setImageAnimating(false)
+    }, 200)
   }, [])
 
   // Touch handlers for swipe
@@ -205,6 +308,22 @@ function App() {
 
   return (
     <div style={styles.container}>
+      {/* Animated gradient background */}
+      <div style={styles.animatedBg} />
+
+      {/* Floating decorative elements */}
+      <div style={styles.floatingContainer}>
+        {floatingElements.map(el => (
+          <FloatingElement key={el.id} element={el} />
+        ))}
+      </div>
+
+      {/* Glowing orbs */}
+      <div style={styles.orb1} />
+      <div style={styles.orb2} />
+      <div style={styles.orb3} />
+      <div style={styles.orb4} />
+
       {/* Header */}
       <header style={{
         ...styles.header,
@@ -212,7 +331,7 @@ function App() {
         transform: showControls ? 'translateY(0)' : 'translateY(-100%)'
       }}>
         <div style={styles.headerLeft}>
-          <h1 style={styles.title}>Photo Gallery</h1>
+          <h1 style={styles.title}>Dowry Gallery</h1>
           <span style={styles.counter}>{currentIndex + 1} / {TOTAL_IMAGES}</span>
         </div>
         <div style={styles.headerRight}>
@@ -220,7 +339,7 @@ function App() {
             onClick={toggleSlideshow}
             style={{
               ...styles.slideshowBtn,
-              backgroundColor: isSlideshow ? 'var(--success)' : 'var(--primary)'
+              background: isSlideshow ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ec4899, #db2777)'
             }}
             title={isSlideshow ? 'Pause Slideshow' : 'Start Slideshow'}
           >
@@ -283,6 +402,7 @@ function App() {
         {/* Navigation arrows - Left */}
         <button
           onClick={goToPrev}
+          className="nav-arrow"
           style={{
             ...styles.navArrow,
             ...styles.navArrowLeft,
@@ -302,21 +422,28 @@ function App() {
               <div style={styles.spinner}></div>
             </div>
           )}
-          <img
-            src={`/img/${currentIndex + 1}.jpeg`}
-            alt={`Image ${currentIndex + 1}`}
-            style={{
-              ...styles.image,
-              opacity: imageLoaded[currentIndex] ? 1 : 0
-            }}
-            onLoad={() => handleImageLoad(currentIndex)}
-            draggable={false}
-          />
+          <div style={{
+            ...styles.imageFrame,
+            transform: imageAnimating ? 'scale(0.95)' : 'scale(1)',
+            opacity: imageAnimating ? 0.5 : 1
+          }}>
+            <img
+              src={`/img/${currentIndex + 1}.jpeg`}
+              alt={`Image ${currentIndex + 1}`}
+              style={{
+                ...styles.image,
+                opacity: imageLoaded[currentIndex] ? 1 : 0
+              }}
+              onLoad={() => handleImageLoad(currentIndex)}
+              draggable={false}
+            />
+          </div>
         </div>
 
         {/* Navigation arrows - Right */}
         <button
           onClick={goToNext}
+          className="nav-arrow"
           style={{
             ...styles.navArrow,
             ...styles.navArrowRight,
@@ -343,8 +470,9 @@ function App() {
               onClick={() => goToIndex(i)}
               style={{
                 ...styles.thumbnail,
-                border: i === currentIndex ? '2px solid var(--primary)' : '2px solid transparent',
-                opacity: i === currentIndex ? 1 : 0.6
+                border: i === currentIndex ? '3px solid #ec4899' : '2px solid rgba(255,255,255,0.2)',
+                opacity: i === currentIndex ? 1 : 0.7,
+                transform: i === currentIndex ? 'scale(1.1)' : 'scale(1)'
               }}
               aria-label={`Go to image ${i + 1}`}
             >
@@ -377,7 +505,64 @@ const styles = {
     flexDirection: 'column',
     position: 'relative',
     overflow: 'hidden',
-    background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%)',
+    background: '#0f0a1a',
+  },
+  animatedBg: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(135deg, #1a0a2e 0%, #16213e 25%, #0f0a1a 50%, #1a0a2e 75%, #2d1b4e 100%)',
+    backgroundSize: '400% 400%',
+    animation: 'gradientShift 20s ease infinite',
+  },
+  floatingContainer: {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+  },
+  orb1: {
+    position: 'absolute',
+    width: '400px',
+    height: '400px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)',
+    top: '-10%',
+    right: '-10%',
+    animation: 'orbFloat1 25s ease-in-out infinite',
+    pointerEvents: 'none',
+  },
+  orb2: {
+    position: 'absolute',
+    width: '350px',
+    height: '350px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)',
+    bottom: '-15%',
+    left: '-10%',
+    animation: 'orbFloat2 30s ease-in-out infinite',
+    pointerEvents: 'none',
+  },
+  orb3: {
+    position: 'absolute',
+    width: '300px',
+    height: '300px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)',
+    top: '30%',
+    left: '10%',
+    animation: 'orbFloat3 22s ease-in-out infinite',
+    pointerEvents: 'none',
+  },
+  orb4: {
+    position: 'absolute',
+    width: '250px',
+    height: '250px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(249,168,212,0.25) 0%, transparent 70%)',
+    top: '60%',
+    right: '15%',
+    animation: 'orbFloat4 28s ease-in-out infinite',
+    pointerEvents: 'none',
   },
   header: {
     display: 'flex',
@@ -389,7 +574,7 @@ const styles = {
     left: 0,
     right: 0,
     zIndex: 100,
-    background: 'linear-gradient(180deg, rgba(2, 6, 23, 0.9) 0%, transparent 100%)',
+    background: 'linear-gradient(180deg, rgba(15,10,26,0.95) 0%, transparent 100%)',
     transition: 'opacity 0.3s ease, transform 0.3s ease',
   },
   headerLeft: {
@@ -397,70 +582,75 @@ const styles = {
     alignItems: 'center',
     gap: '16px',
   },
+  headerRight: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+  },
   title: {
-    fontSize: '1.5rem',
+    fontSize: '1.75rem',
     fontWeight: '700',
-    color: 'var(--text-primary)',
+    background: 'linear-gradient(135deg, #fda4af, #f472b6, #ec4899)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     letterSpacing: '-0.02em',
   },
   counter: {
     fontSize: '0.875rem',
-    fontWeight: '500',
-    color: 'var(--secondary)',
-    background: 'var(--bg-card)',
-    padding: '6px 12px',
+    fontWeight: '600',
+    color: '#fdf4ff',
+    background: 'linear-gradient(135deg, rgba(236,72,153,0.3), rgba(251,191,36,0.2))',
+    padding: '8px 16px',
     borderRadius: '999px',
-  },
-  headerRight: {
-    display: 'flex',
-    gap: '12px',
+    border: '1px solid rgba(236,72,153,0.3)',
   },
   slideshowBtn: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    padding: '10px 16px',
+    padding: '12px 18px',
     border: 'none',
     borderRadius: '12px',
     color: 'white',
     cursor: 'pointer',
     fontSize: '0.875rem',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 20px rgba(236,72,153,0.3)',
   },
   downloadBtn: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    padding: '10px 16px',
-    background: 'var(--secondary)',
-    border: 'none',
+    padding: '12px 18px',
+    background: 'linear-gradient(135deg, rgba(100,116,139,0.8), rgba(71,85,105,0.8))',
+    border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: '12px',
     color: 'white',
     cursor: 'pointer',
     fontSize: '0.875rem',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
   },
   downloadAllBtn: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    padding: '10px 16px',
-    background: 'var(--success)',
+    padding: '12px 18px',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
     border: 'none',
     borderRadius: '12px',
     color: 'white',
     cursor: 'pointer',
     fontSize: '0.875rem',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
   },
   downloadBtnText: {
     display: 'none',
@@ -471,26 +661,34 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    padding: '80px 20px 100px',
+    padding: '100px 24px 120px',
     cursor: 'grab',
     userSelect: 'none',
   },
   imageWrapper: {
-    maxWidth: 'calc(100vw - 120px)',
-    maxHeight: 'calc(100vh - 200px)',
+    maxWidth: 'calc(100vw - 100px)',
+    maxHeight: 'calc(100vh - 280px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
+  },
+  imageFrame: {
+    padding: '8px',
+    background: 'linear-gradient(135deg, rgba(236,72,153,0.3), rgba(251,191,36,0.2), rgba(16,185,129,0.2))',
+    borderRadius: '16px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 25px 80px rgba(236,72,153,0.2), 0 15px 40px rgba(0,0,0,0.3)',
   },
   image: {
-    maxWidth: '100%',
-    maxHeight: 'calc(100vh - 200px)',
+    maxWidth: 'calc(100vw - 120px)',
+    maxHeight: 'calc(100vh - 300px)',
     width: 'auto',
     height: 'auto',
     objectFit: 'contain',
-    borderRadius: '8px',
-    boxShadow: 'var(--shadow)',
-    transition: 'opacity 0.3s ease',
+    borderRadius: '12px',
+    transition: 'opacity 0.4s ease',
+    display: 'block',
   },
   loader: {
     position: 'absolute',
@@ -499,10 +697,10 @@ const styles = {
     justifyContent: 'center',
   },
   spinner: {
-    width: '48px',
-    height: '48px',
-    border: '3px solid var(--border)',
-    borderTopColor: 'var(--primary)',
+    width: '56px',
+    height: '56px',
+    border: '4px solid rgba(236,72,153,0.2)',
+    borderTopColor: '#ec4899',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -510,41 +708,41 @@ const styles = {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    width: '56px',
-    height: '56px',
+    width: '60px',
+    height: '60px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(30, 41, 59, 0.9)',
-    backdropFilter: 'blur(8px)',
-    border: 'none',
+    background: 'linear-gradient(135deg, rgba(236,72,153,0.2), rgba(251,191,36,0.1))',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(236,72,153,0.3)',
     borderRadius: '50%',
-    color: 'var(--text-primary)',
+    color: '#fdf4ff',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-    zIndex: 10,
+    boxShadow: '0 8px 32px rgba(236,72,153,0.2)',
+    zIndex: 20,
   },
   navArrowLeft: {
-    left: '20px',
+    left: '24px',
   },
   navArrowRight: {
-    right: '20px',
+    right: '24px',
   },
   thumbnailStrip: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: '16px 0',
-    background: 'linear-gradient(0deg, rgba(2, 6, 23, 0.95) 0%, transparent 100%)',
+    padding: '20px 0 24px',
+    background: 'linear-gradient(0deg, rgba(15,10,26,0.98) 0%, transparent 100%)',
     transition: 'opacity 0.3s ease, transform 0.3s ease',
     zIndex: 100,
   },
   thumbnailContainer: {
     display: 'flex',
-    gap: '8px',
-    padding: '0 24px',
+    gap: '10px',
+    padding: '0 28px',
     overflowX: 'auto',
     scrollbarWidth: 'thin',
     WebkitOverflowScrolling: 'touch',
@@ -553,63 +751,52 @@ const styles = {
     flexShrink: 0,
     padding: 0,
     background: 'none',
-    border: '2px solid transparent',
-    borderRadius: '8px',
+    borderRadius: '10px',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     overflow: 'hidden',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   },
   thumbnailImg: {
-    width: '60px',
-    height: '60px',
+    width: '65px',
+    height: '65px',
     objectFit: 'cover',
     display: 'block',
-    borderRadius: '6px',
+    borderRadius: '8px',
   },
   slideshowIndicator: {
     position: 'absolute',
-    bottom: '100px',
+    bottom: '110px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: 'var(--bg-card)',
-    backdropFilter: 'blur(8px)',
-    padding: '8px 20px',
+    background: 'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))',
+    backdropFilter: 'blur(12px)',
+    padding: '10px 24px',
     borderRadius: '999px',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 8px 32px rgba(16,185,129,0.2)',
+    border: '1px solid rgba(16,185,129,0.3)',
   },
   slideshowText: {
     fontSize: '0.75rem',
-    fontWeight: '600',
-    color: 'var(--success)',
+    fontWeight: '700',
+    color: '#10b981',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    letterSpacing: '0.08em',
   },
   slideshowProgress: {
-    width: '24px',
-    height: '3px',
-    background: 'rgba(16, 185, 129, 0.3)',
+    width: '30px',
+    height: '4px',
+    background: 'rgba(16,185,129,0.3)',
     borderRadius: '999px',
     position: 'relative',
+    overflow: 'hidden',
   },
 }
 
-const globalStyles = `
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+export default App
 
-  @media (min-width: 640px) {
-    ${styles.downloadBtnText} {
-      display: block;
-    }
-  }
-`
-
-const styleSheet = document.createElement('style')
-styleSheet.innerText = globalStyles
-document.head.appendChild(styleSheet)
 
 export default App
